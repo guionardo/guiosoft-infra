@@ -242,9 +242,21 @@ delete_old_backups() {
 
 do_syncs() {
     for p in "${paths[@]}"; do
+        do_clean "$p"        
         do_sync "$p"
     done
     delete_old_backups
+}
+
+do_clean() {
+    if echo "$last_run_timestamp" | grep $(date +%Y-%m-%d); then
+        log INFO "Ignoring clean"
+    else
+        log INFO "Cleaning before backup"
+        clean_csharp "$p"
+        clean_git "$p"
+        clean_python "$p"
+    fi
 }
 
 ping_host() {
@@ -274,6 +286,52 @@ if empty "$1"; then
 }'
     exit 1
 fi
+
+clean_csharp() {
+    if empty "$1"; then 
+        return
+    fi
+    log INFO "Searching dotnet solutions for cleaning before backup"
+    while IFS= read -r solution; do
+        log INFO "dotnet clean $solution"
+        dotnet clean "$solution"
+        solution_dir=$(dirname "$solution")
+        while IFS= read -r binobj; do
+            log INFO " rm $binobj"
+            rm -r "$binobj"
+        done < <(find "$solution_dir" -type d \( -name 'bin' -o -name 'obj' \))
+    done < <(find "$1" -type f -name '*.sln')      
+}
+
+clean_git() {
+    if empty "$1"; then 
+        return
+    fi
+    log INFO "Searching .git repositories for cleanup"
+    oldcw=$(pwd)
+    while IFS= read -r git_repo; do
+        log INFO "Cleaning .git: $git_repo"
+        cd "$git_repo/.."
+        git gc
+    done < <(find "$1" -type d -name '.git')
+    cd "$oldcw"
+}
+
+clean_python() {
+    if empty "$1"; then 
+        return
+    fi
+    log INFO "Searching python projects for cleanup"
+    while IFS= read -r py_cache; do
+        log INFO "Removing $py_cache"
+        rm -r "$py_cache"        
+    done < <(find "$1" -type d -name '__pycache__')
+    -exec rm -r {} \;
+}
+
+runfile="$0.run"
+touch "$runfile"
+trap '{ rm -f -- "$runfile"; }' EXIT
 
 read_configuration "$1"
 
