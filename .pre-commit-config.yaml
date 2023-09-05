@@ -1,0 +1,46 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-docstring-first
+      - id: requirements-txt-fixer
+      - id: check-toml
+  - repo: https://github.com/pre-commit/mirrors-csslint
+    rev: ''  # Use the sha / tag you want to point at
+    hooks:
+    -   id: csslint
+  - repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: v2.0.2 # Use the sha / tag you want to point at
+    hooks:
+      - id: autopep8
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.0.275
+    hooks:
+      - id: ruff
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        name: isort (python)
+
+  - repo: https://github.com/sourcery-ai/sourcery
+    rev: v1.4.0
+    hooks:
+      - id: sourcery
+        # The best way to use Sourcery in a pre-commit hook:
+        # * review only changed lines:
+        # * omit the summary
+        args: [--diff=git diff HEAD, --no-summary]
+
+  # - repo: https://github.com/Riverside-Healthcare/djLint
+  #   rev: v1.30.2
+  #   hooks:
+  #     - id: djlint-reformat-django
+  #     - id: djlint-django
