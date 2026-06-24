@@ -4,11 +4,22 @@
     name: smartmontools
     state: present
 
+- name: Find available SCSI/SATA drives
+  find:
+    paths: /dev
+    patterns: 'sd[a-z]'
+  register: sata_drives
+
+- name: Find available NVMe drives
+  find:
+    paths: /dev
+    patterns: 'nvme[0-9]n[0-9]'
+  register: nvme_drives
+
 - name: Enable SMART on all available drives
-  shell: |
-    for dev in /dev/sd[a-z] /dev/nvme[0-9]n[0-9]; do
-      [ -e "$dev" ] && smartctl --smart=on --offlineauto=on --saveauto=on "$dev" || true
-    done
+  command:
+    cmd: "smartctl --smart=on --offlineauto=on --saveauto=on {{ item.path }}"
+  loop: "{{ sata_drives.files + nvme_drives.files }}"
   changed_when: false
 
 - name: Create smartd configuration

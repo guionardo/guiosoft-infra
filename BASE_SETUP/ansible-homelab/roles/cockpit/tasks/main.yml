@@ -70,12 +70,6 @@
         - /tmp/cockpit-sensors.tar.xz
         - /tmp/cockpit-sensors
 
-- name: Ensure GPG keyrings directory exists
-  file:
-    path: /usr/share/keyrings
-    state: directory
-    mode: '0755'
-
 - name: Add cockpit-dockermanager APT repo
   copy:
     dest: /etc/apt/sources.list.d/cockpit-dockermanager.list

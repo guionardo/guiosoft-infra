@@ -12,6 +12,43 @@
     autoclean: yes
   when: ansible_os_family == "Debian"
 
+- name: Setup unattended upgrades
+  apt:
+    name: unattended-upgrades
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Create 20auto-upgrades apt configuration file
+  file:
+    path: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: '0644'
+    state: touch
+
+- name: Populate 20auto-upgrades apt file
+  lineinfile:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    line: "{{ item }}"
+  loop:
+    - 'APT::Periodic::Update-Package-Lists "1";'
+    - 'APT::Periodic::Unattended-Upgrade "1";'
+
+- name: Enable remove unused dependencies in 50unattended-upgrades
+  lineinfile:
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    line: 'Unattended-Upgrade::Remove-Unused-Dependencies "true";'
+    insertafter: "^//Unattended-Upgrade::Remove-Unused-Dependencies"
+
+- name: Create APT keyrings directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /etc/apt/keyrings
+    - /usr/share/keyrings
+
 - name: Install base packages
   apt:
     name: "{{ base_packages }}"
@@ -42,6 +79,20 @@
     name: chronyd
     state: started
     enabled: yes
+
+- name: Remove default NTP pool entries
+  lineinfile:
+    path: /etc/chrony/chrony.conf
+    regexp: "^pool "
+    state: absent
+
+- name: Configure NTP servers
+  lineinfile:
+    path: /etc/chrony/chrony.conf
+    line: "pool {{ item }} iburst"
+    state: present
+  loop: "{{ ntp_servers }}"
+  notify: Restart chrony
 
 - name: Create homelab directories
   file:

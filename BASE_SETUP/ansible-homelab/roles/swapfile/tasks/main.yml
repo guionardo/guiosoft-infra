@@ -6,7 +6,7 @@
 
 - name: Create swapfile
   command:
-    cmd: "dd if=/dev/zero of={{ swapfile_path }} bs=1M count={{ swapfile_size_mb }}"
+    cmd: "fallocate -l {{ swapfile_size_mb }}M {{ swapfile_path }}"
     creates: "{{ swapfile_path }}"
 
 - name: Set swapfile permissions

@@ -99,7 +99,7 @@ Com o servidor básico funcionando, o resto da configuração é 100% automatiza
 
 | Role | O que faz |
 |------|-----------|
-| **common** | Atualiza o sistema, instala pacotes base (helix, starship, lm-sensors, ufw, mc, git, etc.), configura hostname, timezone, NTP e diretórios |
+| **common** | Atualiza o sistema, instala pacotes base (helix, starship, lm-sensors, ufw, mc, git, etc.), configura hostname, timezone, NTP, diretórios e unattended-upgrades |
 | **swapfile** | Cria um arquivo de swap de 4 GB com swappiness baixo |
 | **kernel** | Adiciona o repositório Zabbly e instala o kernel mainline mais recente |
 | **docker** | Instala Docker CE, Docker Compose v2, Buildx e adiciona usuários ao grupo docker |
@@ -135,7 +135,13 @@ E a variável com o token do Cloudflare Tunnel foi criptografada com Ansible Vau
 ansible-vault encrypt_string "meu-token-aqui" --name cloudflare_tunnel_token
 ```
 
-A execução completa é feita com um comando:
+Para facilitar, o próprio script de setup tem um helper interativo que cria o `.vault_pass` e já gera o token criptografado:
+
+```bash
+./scripts/setup-homelab.sh vault
+```
+
+A execução completa do playbook é feita com um comando:
 
 ```bash
 cd ansible-homelab
@@ -153,6 +159,7 @@ O resultado final é um servidor pronto para uso, com:
 - Monitoramento SMART para prevenir falhas de disco
 - Servidor de e-mail local para alertas do sistema
 - Ambiente de desenvolvimento com Helix editor e Starship prompt
+- Unattended upgrades para atualizações automáticas de segurança
 
 E tudo versionado em Git, documentado e reproduzível. Se o disco queimar amanhã, em 30 minutos o servidor está de pé de novo.
 

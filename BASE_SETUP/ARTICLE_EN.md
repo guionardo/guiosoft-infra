@@ -99,7 +99,7 @@ With the basic server up and running, the rest of the configuration is 100% auto
 
 | Role | What it does |
 |------|-------------|
-| **common** | System updates, base packages (helix, starship, lm-sensors, ufw, mc, git, etc.), hostname, timezone, NTP, directories |
+| **common** | System updates, base packages (helix, starship, lm-sensors, ufw, mc, git, etc.), hostname, timezone, NTP, directories, unattended-upgrades |
 | **swapfile** | Creates a 4 GB swapfile with low swappiness |
 | **kernel** | Adds the Zabbly repository and installs the latest mainline kernel |
 | **docker** | Installs Docker CE, Docker Compose v2, Buildx, and adds users to the docker group |
@@ -135,7 +135,13 @@ The Cloudflare Tunnel token was encrypted with Ansible Vault so it wouldn't be e
 ansible-vault encrypt_string "your-token-here" --name cloudflare_tunnel_token
 ```
 
-The full setup runs with a single command:
+To make it easier, the setup script includes an interactive helper that creates `.vault_pass` and generates the encrypted token:
+
+```bash
+./scripts/setup-homelab.sh vault
+```
+
+The full playbook runs with a single command:
 
 ```bash
 cd ansible-homelab
@@ -153,6 +159,7 @@ The end result is a production-ready server with:
 - SMART monitoring to prevent disk failures
 - Local mail server for system alerts
 - Development environment with Helix editor and Starship prompt
+- Unattended upgrades for automatic security updates
 
 And everything is versioned in Git, documented, and reproducible. If the disk dies tomorrow, the server is back up in 30 minutes.
 

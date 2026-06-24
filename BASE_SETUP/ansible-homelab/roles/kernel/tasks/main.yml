@@ -1,10 +1,4 @@
 ---
-- name: Ensure keyrings directory exists
-  file:
-    path: /etc/apt/keyrings
-    state: directory
-    mode: '0755'
-
 - name: Download Zabbly GPG key
   get_url:
     url: https://pkgs.zabbly.com/key.asc
@@ -36,17 +30,18 @@
       Signed-By: /etc/apt/keyrings/zabbly.asc
     mode: '0644'
 
-- name: Update apt cache
-  apt:
-    update_cache: yes
-  changed_when: false
-
 - name: Install linux-zabbly meta-package
   apt:
     name: linux-zabbly
     state: present
+    update_cache: yes
   register: kernel_install
 
 - name: Update grub
   command: update-grub
+  when: kernel_install.changed
+
+- name: Notify about required reboot
+  debug:
+    msg: "A new kernel was installed. Run 'sudo reboot' to use it."
   when: kernel_install.changed
