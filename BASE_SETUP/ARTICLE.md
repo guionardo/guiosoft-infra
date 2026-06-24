@@ -95,6 +95,8 @@ sudo whoami
 
 ### O Playbook Ansible
 
+Já configurei servidores manualmente várias vezes — é uma tarefa repetitiva, sujeita a erros e entediante. Por isso escolhi o Ansible: com um único comando, tudo o que eu fazia à mão vira código versionado, idempotente e reproduzível.
+
 Com o servidor básico funcionando, o resto da configuração é 100% automatizada com Ansible. O playbook principal (`playbooks/site.yml`) orquestra 8 roles:
 
 | Role | O que faz |
@@ -106,7 +108,7 @@ Com o servidor básico funcionando, o resto da configuração é 100% automatiza
 | **cockpit** | Instala o Cockpit + plugins (sensors, dockermanager, navigator, benchmark, compose, cloudflared, file-sharing) |
 | **cloudflare-tunnel** | Instala o cloudflared e configura o túnel Cloudflare |
 | **smartmontools** | Ativa monitoramento SMART em todos os discos e agenda testes |
-| **mail-server** | Configura Postfix local para entrega de e-mails do sistema |
+| **mail-server** | Configura Postfix local, root alias, test email, notificação de e-mails não lidos no prompt |
 
 ### Executando o Ansible
 
@@ -160,6 +162,7 @@ O resultado final é um servidor pronto para uso, com:
 - Servidor de e-mail local para alertas do sistema
 - Ambiente de desenvolvimento com Helix editor e Starship prompt
 - Unattended upgrades para atualizações automáticas de segurança
+- Notificação de e-mails não lidos no prompt do shell
 
 E tudo versionado em Git, documentado e reproduzível. Se o disco queimar amanhã, em 30 minutos o servidor está de pé de novo.
 

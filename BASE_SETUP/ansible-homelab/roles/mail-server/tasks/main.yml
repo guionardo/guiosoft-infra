@@ -65,3 +65,44 @@
     name: postfix
     state: started
     enabled: yes
+
+- name: Get admin user home directory
+  getent:
+    database: passwd
+    key: "{{ mail_server_admin_user }}"
+
+- name: Create .mail_prompt script
+  copy:
+    dest: "{{ getent_passwd[mail_server_admin_user][4] }}/.mail_prompt"
+    content: |
+      MAIL_CHECK_TIME=0
+
+      mail_prompt() {
+          local mail_interval=${MAILCHECK:-60}
+          local elapsed=$((SECONDS - MAIL_CHECK_TIME))
+
+          if [[ "$MAIL_CHECK_TIME" -eq 0 || "$elapsed" -gt "$mail_interval" ]]; then
+              local count
+              count=$(mailx -H 2>/dev/null | grep -c '^[> ]*[NU]')
+              if [[ "$count" -gt 0 ]]; then
+                  local word="message"
+                  [[ "$count" -gt 1 ]] && word="messages"
+                  echo "$count unread $word. Run mutt"
+              fi
+              MAIL_CHECK_TIME=$SECONDS
+          fi
+      }
+
+      if command -v mailx &>/dev/null; then
+          PROMPT_COMMAND="mail_prompt${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
+      fi
+    mode: '0644'
+    owner: "{{ mail_server_admin_user }}"
+    group: "{{ mail_server_admin_user }}"
+
+- name: Source .mail_prompt in .bashrc
+  lineinfile:
+    path: "{{ getent_passwd[mail_server_admin_user][4] }}/.bashrc"
+    line: "source $HOME/.mail_prompt"
+    state: present
+    create: yes

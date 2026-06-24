@@ -10,6 +10,7 @@
 - [x] SMART monitoring + fstrim
 - [x] Local mail server (Postfix)
 - [x] Unattended upgrades (auto security updates)
+- [x] Mail notification prompt (`.mail_prompt` sourced in `.bashrc`)
 - [x] lm-sensors
 
 **Ansible playbook:** `ansible-homelab/playbooks/site.yml`
