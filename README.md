@@ -17,7 +17,7 @@ Initial setup with Ansible
 
 ## NOTIFICATION
 
-- Push notification
+- [ ] NTFY Push notification
 
 ## SERVICES
 
