@@ -1,0 +1,7 @@
+# smartd configuration - Managed by Ansible
+# Monitor all ATA/SATA and NVMe drives
+
+DEVICESCAN -H -l error -l selftest -f \
+  -s {{ smartmontools_schedule }} \
+  -m {{ smartmontools_email }} \
+  -M daily

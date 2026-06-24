@@ -1,0 +1,12 @@
+---
+galaxy_info:
+  author: guionardo
+  description: Creates and configures a swapfile with low swappiness
+  license: MIT
+  min_ansible_version: '2.14'
+  platforms:
+    - name: Debian
+      versions:
+        - trixie
+        - bookworm
+dependencies: []

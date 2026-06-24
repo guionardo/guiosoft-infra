@@ -1,0 +1,42 @@
+---
+- name: Install smartmontools
+  apt:
+    name: smartmontools
+    state: present
+
+- name: Find available SCSI/SATA drives
+  find:
+    paths: /dev
+    patterns: 'sd[a-z]'
+  register: sata_drives
+
+- name: Find available NVMe drives
+  find:
+    paths: /dev
+    patterns: 'nvme[0-9]n[0-9]'
+  register: nvme_drives
+
+- name: Enable SMART on all available drives
+  command:
+    cmd: "smartctl --smart=on --offlineauto=on --saveauto=on {{ item.path }}"
+  loop: "{{ sata_drives.files + nvme_drives.files }}"
+  changed_when: false
+
+- name: Create smartd configuration
+  template:
+    src: smartd.conf.j2
+    dest: /etc/smartd.conf
+    mode: '0644'
+  notify: Restart smartd
+
+- name: Start and enable smartd
+  systemd:
+    name: smartd
+    state: started
+    enabled: yes
+
+- name: Enable and start fstrim timer
+  systemd:
+    name: fstrim.timer
+    state: started
+    enabled: yes

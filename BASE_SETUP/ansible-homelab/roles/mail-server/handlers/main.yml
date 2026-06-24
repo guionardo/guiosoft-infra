@@ -1,0 +1,8 @@
+---
+- name: Restart postfix
+  systemd:
+    name: postfix
+    state: restarted
+
+- name: Update aliases
+  command: newaliases

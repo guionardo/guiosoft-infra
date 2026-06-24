@@ -1,0 +1,12 @@
+---
+timezone: UTC
+ntp_servers:
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org
+base_packages:
+  - curl
+  - wget
+  - vim
+  - git
+  - ca-certificates
+  - bash-completion

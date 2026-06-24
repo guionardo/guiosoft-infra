@@ -1,0 +1,47 @@
+---
+- name: Download Zabbly GPG key
+  get_url:
+    url: https://pkgs.zabbly.com/key.asc
+    dest: /etc/apt/keyrings/zabbly.asc
+    mode: '0644'
+
+- name: Verify Zabbly key fingerprint
+  shell: |
+    gpg --show-keys --with-fingerprint /etc/apt/keyrings/zabbly.asc 2>/dev/null |
+    grep -q "82CC 8797 C838 DCFD"
+  changed_when: false
+  ignore_errors: yes
+
+- name: Get dpkg architecture
+  command: dpkg --print-architecture
+  register: dpkg_arch
+  changed_when: false
+
+- name: Add Zabbly kernel repository
+  copy:
+    dest: /etc/apt/sources.list.d/zabbly-kernel-stable.sources
+    content: |
+      Enabled: yes
+      Types: deb
+      URIs: https://pkgs.zabbly.com/kernel/stable
+      Suites: {{ ansible_distribution_release }}
+      Components: main
+      Architectures: {{ dpkg_arch.stdout }}
+      Signed-By: /etc/apt/keyrings/zabbly.asc
+    mode: '0644'
+
+- name: Install linux-zabbly meta-package
+  apt:
+    name: linux-zabbly
+    state: present
+    update_cache: yes
+  register: kernel_install
+
+- name: Update grub
+  command: update-grub
+  when: kernel_install.changed
+
+- name: Notify about required reboot
+  debug:
+    msg: "A new kernel was installed. Run 'sudo reboot' to use it."
+  when: kernel_install.changed

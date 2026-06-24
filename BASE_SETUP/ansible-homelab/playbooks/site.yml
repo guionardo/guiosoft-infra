@@ -1,0 +1,21 @@
+---
+- name: Configure homelab server
+  hosts: homelab
+  become: yes
+  roles:
+    - role: common
+      tags: [common]
+    - role: swapfile
+      tags: [swapfile, swap]
+    - role: kernel
+      tags: [kernel]
+    - role: docker
+      tags: [docker]
+    - role: cockpit
+      tags: [cockpit]
+    - role: cloudflare-tunnel
+      tags: [cloudflare, tunnel]
+    - role: smartmontools
+      tags: [smartmontools, smart, disk]
+    - role: mail-server
+      tags: [mail, postfix]

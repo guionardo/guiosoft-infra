@@ -1,0 +1,104 @@
+---
+- name: Remove leftover 45Drives sources from previous failed runs
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/45drives-enterprise-trixie.list
+    - /etc/apt/sources.list.d/45drives.sources
+    - /etc/apt/sources.list.d/45drives.list
+    - /etc/apt/keyrings/45drives-archive-keyring.gpg
+    - /etc/apt/keyrings/45drives.asc
+    - /usr/share/keyrings/45drives-archive-keyring.gpg
+    - /opt/45drives
+
+- name: Install Cockpit and base plugins
+  apt:
+    name: "{{ ['cockpit'] + cockpit_plugins }}"
+    state: present
+
+- name: Start and enable cockpit socket
+  systemd:
+    name: cockpit.socket
+    state: started
+    enabled: yes
+
+- name: Configure cockpit port
+  lineinfile:
+    path: /etc/cockpit/cockpit.conf
+    regexp: "^Port"
+    line: "Port = {{ cockpit_port }}"
+    state: present
+    create: yes
+  notify: Restart cockpit
+
+- name: Allow cockpit port in UFW
+  ufw:
+    rule: allow
+    port: "{{ cockpit_port }}"
+    proto: tcp
+
+- name: Add cockpit-dockermanager APT repo
+  copy:
+    dest: /etc/apt/sources.list.d/cockpit-dockermanager.list
+    content: |
+      deb [trusted=yes arch=all] https://chrisjbawden.github.io/cockpit-dockermanager stable main
+    mode: '0644'
+
+- name: Install dockermanager
+  apt:
+    name: dockermanager
+    state: present
+    update_cache: yes
+
+- name: Add 45Drives repository
+  block:
+    - name: Download 45Drives GPG key
+      get_url:
+        url: https://repo.45drives.com/key/gpg.asc
+        dest: /usr/share/keyrings/45drives-archive-keyring.gpg
+        mode: '0644'
+
+    - name: Add 45Drives apt sources
+      copy:
+        dest: /etc/apt/sources.list.d/45drives.sources
+        content: |
+          Types: deb
+          URIs: https://repo.45drives.com/enterprise/debian
+          Suites: bookworm
+          Components: main
+          Architectures: amd64
+          Signed-By: /usr/share/keyrings/45drives-archive-keyring.gpg
+        mode: '0644'
+
+- name: Install 45Drives cockpit plugins
+  apt:
+    name:
+      - cockpit-file-sharing
+      - cockpit-navigator
+      - cockpit-benchmark
+    state: present
+    update_cache: yes
+
+- name: Install cockpit-compose
+  block:
+    - name: Get latest cockpit-compose release
+      uri:
+        url: https://api.github.com/repos/RXTX4816/cockpit-compose/releases/latest
+        return_content: yes
+      register: compose_release
+      until: compose_release.status == 200
+      retries: 3
+      delay: 5
+
+    - name: Download cockpit-compose .deb
+      get_url:
+        url: "https://github.com/RXTX4816/cockpit-compose/releases/download/{{ compose_release.json.tag_name }}/cockpit-compose_{{ compose_release.json.tag_name | regex_replace('^v', '') }}-1_all.deb"
+        dest: /tmp/cockpit-compose.deb
+        mode: '0644'
+
+    - name: Install cockpit-compose
+      apt:
+        deb: /tmp/cockpit-compose.deb
+
+

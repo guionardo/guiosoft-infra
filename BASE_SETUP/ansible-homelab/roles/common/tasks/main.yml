@@ -1,0 +1,124 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: Upgrade all packages
+  apt:
+    upgrade: dist
+    autoremove: yes
+    autoclean: yes
+  when: ansible_os_family == "Debian"
+
+- name: Setup unattended upgrades
+  apt:
+    name: unattended-upgrades
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Create 20auto-upgrades apt configuration file
+  file:
+    path: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: '0644'
+    state: touch
+
+- name: Populate 20auto-upgrades apt file
+  lineinfile:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    line: "{{ item }}"
+  loop:
+    - 'APT::Periodic::Update-Package-Lists "1";'
+    - 'APT::Periodic::Unattended-Upgrade "1";'
+
+- name: Enable remove unused dependencies in 50unattended-upgrades
+  lineinfile:
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    line: 'Unattended-Upgrade::Remove-Unused-Dependencies "true";'
+    insertafter: "^//Unattended-Upgrade::Remove-Unused-Dependencies"
+
+- name: Create APT keyrings directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /etc/apt/keyrings
+    - /usr/share/keyrings
+
+- name: Install base packages
+  apt:
+    name: "{{ base_packages }}"
+    state: present
+
+- name: Configure hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Add hostname to /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    regexp: "^127\\.0\\.1\\.1"
+    line: "127.0.1.1 {{ inventory_hostname }}"
+    state: present
+
+- name: Set timezone
+  timezone:
+    name: "{{ timezone }}"
+
+- name: Install chrony for NTP
+  apt:
+    name: chrony
+    state: present
+
+- name: Start and enable chrony
+  systemd:
+    name: chronyd
+    state: started
+    enabled: yes
+
+- name: Remove default NTP pool entries
+  lineinfile:
+    path: /etc/chrony/chrony.conf
+    regexp: "^pool "
+    state: absent
+
+- name: Configure NTP servers
+  lineinfile:
+    path: /etc/chrony/chrony.conf
+    line: "pool {{ item }} iburst"
+    state: present
+  loop: "{{ ntp_servers }}"
+  notify: Restart chrony
+
+- name: Create homelab directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /opt/homelab
+    - /opt/homelab/data
+    - /opt/homelab/scripts
+    - /opt/homelab/configs
+    - /var/log/homelab
+
+- name: Enable bash completion
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    regexp: "^#.*bash_completion$"
+    line: "source /usr/share/bash-completion/bash_completion"
+    state: present
+    create: yes
+  ignore_errors: yes
+
+- name: Install Helix editor
+  include_tasks: helix.yml
+  tags: [helix]
+
+- name: Install Starship prompt
+  include_tasks: starship.yml
+  tags: [starship]

@@ -30,17 +30,4 @@ repos:
       - id: isort
         name: isort (python)
 
-  - repo: https://github.com/sourcery-ai/sourcery
-    rev: v1.4.0
-    hooks:
-      - id: sourcery
-        # The best way to use Sourcery in a pre-commit hook:
-        # * review only changed lines:
-        # * omit the summary
-        args: [--diff=git diff HEAD, --no-summary]
 
-  # - repo: https://github.com/Riverside-Healthcare/djLint
-  #   rev: v1.30.2
-  #   hooks:
-  #     - id: djlint-reformat-django
-  #     - id: djlint-django
