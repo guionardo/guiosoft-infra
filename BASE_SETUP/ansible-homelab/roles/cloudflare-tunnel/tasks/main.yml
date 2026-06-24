@@ -1,0 +1,31 @@
+---
+- name: Create keyrings directory
+  file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Add Cloudflare GPG key
+  get_url:
+    url: https://pkg.cloudflare.com/cloudflare-main.gpg
+    dest: /usr/share/keyrings/cloudflare-main.gpg
+    mode: '0644'
+
+- name: Add Cloudflare apt repository
+  copy:
+    dest: /etc/apt/sources.list.d/cloudflared.list
+    content: |
+      deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main
+    mode: '0644'
+
+- name: Install cloudflared
+  apt:
+    name: cloudflared
+    state: present
+    update_cache: yes
+
+- name: Install cloudflared tunnel service
+  command: cloudflared service install {{ cloudflare_tunnel_token }}
+  args:
+    creates: /etc/systemd/system/cloudflared.service
+  when: cloudflare_tunnel_token | length > 0

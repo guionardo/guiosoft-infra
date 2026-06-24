@@ -1,0 +1,67 @@
+---
+- name: Install postfix and mail utilities
+  apt:
+    name:
+      - postfix
+      - mailutils
+      - bsd-mailx
+      - mutt
+    state: present
+
+- name: Configure postfix for local-only delivery
+  debconf:
+    name: postfix
+    question: postfix/main_mailer_type
+    value: Local only
+    vtype: select
+
+- name: Ensure postfix listens only on loopback
+  lineinfile:
+    path: /etc/postfix/main.cf
+    regexp: "^inet_interfaces"
+    line: "inet_interfaces = loopback-only"
+    state: present
+  notify: Restart postfix
+
+- name: Ensure local recipients only
+  lineinfile:
+    path: /etc/postfix/main.cf
+    regexp: "^mydestination"
+    line: "mydestination = $myhostname, localhost.$mydomain, localhost"
+    state: present
+  notify: Restart postfix
+
+- name: Set up root alias to forward mail to user
+  lineinfile:
+    path: /etc/aliases
+    regexp: "^root:"
+    line: "root: {{ mail_server_admin_user }}"
+    state: present
+  notify: Update aliases
+
+- name: Create mail spool for admin user
+  copy:
+    content: ""
+    dest: "/var/mail/{{ mail_server_admin_user }}"
+    force: no
+    owner: "{{ mail_server_admin_user }}"
+    group: "{{ mail_server_admin_user }}"
+    mode: '0600'
+
+- name: Send test email on first setup
+  shell: |
+    echo "Mail server setup complete on {{ ansible_hostname }}.
+    
+    All services are configured and ready.
+    
+    - Postfix local-only MTA
+    - Root mail forwarded to {{ mail_server_admin_user }}" | mail -s "Mail Server Test - {{ ansible_hostname }}" {{ mail_server_admin_user }}
+    touch /var/mail/.mail-test-sent
+  args:
+    creates: /var/mail/.mail-test-sent
+
+- name: Start and enable postfix
+  systemd:
+    name: postfix
+    state: started
+    enabled: yes

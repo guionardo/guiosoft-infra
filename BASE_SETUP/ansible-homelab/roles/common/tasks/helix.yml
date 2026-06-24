@@ -1,0 +1,54 @@
+---
+- name: Get latest Helix release version
+  uri:
+    url: https://api.github.com/repos/helix-editor/helix/releases/latest
+    return_content: yes
+  register: helix_release
+
+- name: Download Helix tarball
+  get_url:
+    url: "https://github.com/helix-editor/helix/releases/download/{{ helix_release.json.tag_name }}/helix-{{ helix_release.json.tag_name }}-x86_64-linux.tar.xz"
+    dest: /tmp/helix.tar.xz
+    mode: '0644'
+
+- name: Extract Helix
+  unarchive:
+    src: /tmp/helix.tar.xz
+    dest: /usr/local
+    remote_src: yes
+    extra_opts: [--strip-components=1]
+    creates: /usr/local/hx
+
+- name: Symlink hx into PATH
+  file:
+    src: /usr/local/hx
+    dest: /usr/local/bin/hx
+    state: link
+    force: yes
+
+- name: Set HELIX_RUNTIME environment
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    regexp: "^export HELIX_RUNTIME"
+    line: 'export HELIX_RUNTIME=/usr/local/runtime'
+    state: present
+    create: yes
+
+- name: Set hx as default editor
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    regexp: "^export EDITOR"
+    line: "export EDITOR=hx"
+    state: present
+    create: yes
+
+- name: Validate hx is callable
+  become_user: "{{ ansible_user }}"
+  command: hx --version
+  register: hx_check
+  changed_when: false
+
+- name: Remove temporary archive
+  file:
+    path: /tmp/helix.tar.xz
+    state: absent
