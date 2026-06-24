@@ -14,7 +14,6 @@
 ├── AGENTS.md             # AI agent conventions
 ├── MEMORY.md             # This file
 ├── README.md             # Project overview
-├── mail.sh / mail_2.sh   # Mail notification scripts
 ├── BASE_SETUP/           # Ansible homelab automation + articles
 │   ├── ansible-homelab/  # Playbooks, roles, inventory, scripts
 │   ├── ARTICLE.md        # Homelab article (PT-BR)
