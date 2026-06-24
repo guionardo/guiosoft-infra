@@ -1,10 +1,24 @@
 # guiosoft-infra
-Automação para instalação de recursos nos sistemas GuioSoft
+Automation for installing resources on GuioSoft systems
+
+## BASE SETUP
+
+Initial setup with Ansible
+
+## DEV ENVIRONMENT
+
+- [ ] Code Server
+- [ ] OpenCode
 
 ## BACKUPS
 
-Scripts de backups automatizados para o furlan-server
+- [ ] Internal backup
+- [ ] External backup storage
 
 ## NOTIFICATION
 
-Notificação via push
+- Push notification
+
+## SERVICES
+
+- [ ] In development

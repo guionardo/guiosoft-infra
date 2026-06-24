@@ -105,7 +105,7 @@ With the basic server up and running, the rest of the configuration is 100% auto
 | **swapfile** | Creates a 4 GB swapfile with low swappiness |
 | **kernel** | Adds the Zabbly repository and installs the latest mainline kernel |
 | **docker** | Installs Docker CE, Docker Compose v2, Buildx, and adds users to the docker group |
-| **cockpit** | Installs Cockpit + plugins (sensors, dockermanager, navigator, benchmark, compose, cloudflared, file-sharing) |
+| **cockpit** | Installs Cockpit + plugins (dockermanager, navigator, benchmark, compose, file-sharing) |
 | **cloudflare-tunnel** | Installs cloudflared and configures the Cloudflare Tunnel |
 | **smartmontools** | Enables SMART monitoring on all drives and schedules tests |
 | **mail-server** | Configures local Postfix, root alias, test email, unread mail notification in prompt |

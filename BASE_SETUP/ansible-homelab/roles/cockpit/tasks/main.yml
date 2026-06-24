@@ -38,38 +38,6 @@
     port: "{{ cockpit_port }}"
     proto: tcp
 
-- name: Install cockpit-sensors
-  block:
-    - name: Download cockpit-sensors tarball
-      get_url:
-        url: https://github.com/ocristopfer/cockpit-sensors/releases/latest/download/cockpit-sensors.tar.xz
-        dest: /tmp/cockpit-sensors.tar.xz
-        mode: '0644'
-      register: sensors_download
-
-    - name: Extract cockpit-sensors tarball
-      unarchive:
-        src: /tmp/cockpit-sensors.tar.xz
-        dest: /tmp
-        remote_src: yes
-      when: sensors_download.changed
-
-    - name: Install cockpit-sensors
-      copy:
-        src: /tmp/cockpit-sensors/dist/
-        dest: /usr/share/cockpit/sensors/
-        remote_src: yes
-        mode: '0644'
-      when: sensors_download.changed
-
-    - name: Clean up cockpit-sensors temp files
-      file:
-        path: "{{ item }}"
-        state: absent
-      loop:
-        - /tmp/cockpit-sensors.tar.xz
-        - /tmp/cockpit-sensors
-
 - name: Add cockpit-dockermanager APT repo
   copy:
     dest: /etc/apt/sources.list.d/cockpit-dockermanager.list
@@ -133,25 +101,4 @@
       apt:
         deb: /tmp/cockpit-compose.deb
 
-- name: Install cockpit-cloudflared
-  block:
-    - name: Install rpm2cpio
-      apt:
-        name: rpm2cpio
-        state: present
 
-    - name: Download cockpit-cloudflared RPM
-      get_url:
-        url: https://github.com/gbraad-cockpit/cockpit-cloudflared/releases/download/v0.0.2/cockpit-cloudflared-v0.0.2-1.fc38.noarch.rpm
-        dest: /tmp/cockpit-cloudflared.rpm
-        mode: '0644'
-
-    - name: Extract and install cloudflared plugin
-      shell: |
-        mkdir -p /tmp/cf-extract
-        cd /tmp/cf-extract
-        rpm2cpio /tmp/cockpit-cloudflared.rpm | cpio -idm
-        cp -r usr/share/cockpit/cloudflared /usr/share/cockpit/
-        rm -rf /tmp/cf-extract /tmp/cockpit-cloudflared.rpm
-      args:
-        creates: /usr/share/cockpit/cloudflared/manifest.json

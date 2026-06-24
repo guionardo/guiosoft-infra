@@ -68,5 +68,4 @@ cloudflare_tunnel_token: !vault |
 cockpit_port: 9090
 cockpit_plugins:
   - cockpit-machines
-  - cockpit-podman
   - cockpit-storaged
